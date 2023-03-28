@@ -5,10 +5,15 @@ ENV wrk_binary_path="/usr/bin/wrk"
 
 # Temporary layer which builds wrk2 binary, only used to copy out the binary in final layer for small image
 FROM base AS wrk-builder
+
+# Dependencies
 RUN apk add --update alpine-sdk libgcc openssl-dev zlib-dev \
-  && apk add --no-cache git \
-  && git clone https://github.com/giltene/wrk2.git \
+  && apk add --no-cache git
+
+# Arm compatible wrk2
+RUN git clone https://github.com/tbbharaj/wrk2.git \
   && cd wrk2 \
+  && git checkout wrk2-a64-support \
   && make \
   && cp wrk ${wrk_binary_path} \
   && cd .. \
@@ -24,4 +29,4 @@ COPY --from=wrk-builder ${wrk_binary_path} ${wrk_binary_path}
 COPY . .
 RUN yarn install
 
-ENTRYPOINT ["node", "./cli/bin/run"]
+CMD ["node", "./cli/bin/run"]
